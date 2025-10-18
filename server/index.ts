@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { connectDB } from "./db";
+import { createDefaultAdmin } from "./seed";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +39,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Note: MongoDB connection disabled - using in-memory storage
+  // To enable MongoDB, uncomment the next two lines and provide a valid MONGODB_URI
+  // await connectDB();
+  // await createDefaultAdmin();
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
