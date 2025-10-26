@@ -12,6 +12,15 @@ import MyBookings from "@/pages/my-bookings";
 import SellerDashboard from "@/pages/seller-dashboard";
 import AdminPanel from "@/pages/admin-panel";
 import NotFound from "@/pages/not-found";
+import About from './pages/About';
+import CookiePolicy from "./pages/cookie-policy";
+import PrivacyPolicy from "./pages/privacy-policy";
+import TermsConditions from "./pages/terms-conditions";
+import HelpPage from "@/pages/help";
+
+import ForgotPassword from "./pages/ForgotPassword";
+import VerifyOTP from "./pages/VerifyOTP";
+import ResetPassword from "./pages/ResetPassword";
 
 function Router() {
   return (
@@ -23,6 +32,14 @@ function Router() {
       <Route path="/my-bookings" component={MyBookings} />
       <Route path="/seller/dashboard" component={SellerDashboard} />
       <Route path="/admin" component={AdminPanel} />
+      <Route path="/about" component={About} />
+       <Route path="/cookie-policy" component={CookiePolicy} />
+       <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/terms-conditions" component={TermsConditions} />
+      <Route path="/help" component={HelpPage} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+<Route path="/verify-otp" component={VerifyOTP} />
+<Route path="/reset-password" component={ResetPassword} />
       <Route component={NotFound} />
     </Switch>
   );
