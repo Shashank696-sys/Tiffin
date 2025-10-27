@@ -256,7 +256,7 @@ export default function Login() {
                   <ShieldCheck className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900"></h3>
+                  <h3 className="font-semibold text-gray-900">Safe & Hygienic</h3>
                   <p className="text-sm text-gray-600 mt-1">Quality assured packaging</p>
                 </div>
               </div>
