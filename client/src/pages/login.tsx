@@ -33,7 +33,6 @@ export default function Login() {
       const response = await apiRequest<AuthResponse>("POST", "/api/auth/login", {
         email: data.email,
         password: data.password,
-        turnstileToken: data.turnstileToken,
       });
       return response;
     },
