@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -18,7 +18,6 @@ export default function Login() {
   const { login } = useAuth();
   const [, setLocation] = useLocation();
   const [showPassword, setShowPassword] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const form = useForm<LoginCredentials>({
     resolver: zodResolver(loginSchema),
@@ -29,7 +28,7 @@ export default function Login() {
   });
 
   const loginMutation = useMutation({
-    mutationFn: async (data: LoginCredentials & { turnstileToken?: string }) => {
+    mutationFn: async (data: LoginCredentials) => {
       const response = await apiRequest<AuthResponse>("POST", "/api/auth/login", {
         email: data.email,
         password: data.password,
@@ -64,22 +63,11 @@ export default function Login() {
         description: error.message || "Invalid credentials. Please try again.",
         variant: "destructive",
       });
-      // Reset Turnstile on error
-      setTurnstileToken(null);
     },
   });
 
   const onSubmit = (data: LoginCredentials) => {
-    if (!turnstileToken) {
-      toast({
-        title: "Security verification required",
-        description: "Please complete the security check",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    loginMutation.mutate({ ...data, turnstileToken });
+    loginMutation.mutate(data);
   };
 
   const demoLogin = (role: "admin" | "seller" | "user") => {
@@ -92,11 +80,7 @@ export default function Login() {
     form.setValue("email", demoCredentials[role].email);
     form.setValue("password", demoCredentials[role].password);
     
-    // For demo, we'll bypass Turnstile by setting a mock token
-    const mockToken = "demo_turnstile_token_" + Date.now();
-    setTurnstileToken(mockToken);
-    
-    // Submit after a small delay to ensure token is set
+    // Submit after a small delay to ensure values are set
     setTimeout(() => {
       onSubmit(demoCredentials[role]);
     }, 100);
@@ -194,6 +178,34 @@ export default function Login() {
                   <p className="text-sm text-gray-600 mt-1">Always here to help</p>
                 </div>
               </div>
+            </div>
+
+            {/* Demo Login Buttons */}
+            <div className="mt-8 p-6 bg-red-50 rounded-2xl border border-red-100">
+              <h3 className="font-semibold text-gray-900 mb-4 text-center">Quick Demo Access</h3>
+              <div className="grid grid-cols-3 gap-3">
+                <Button
+                  onClick={() => demoLogin("admin")}
+                  className="bg-red-600 hover:bg-red-700 text-white text-xs h-10"
+                >
+                  Admin
+                </Button>
+                <Button
+                  onClick={() => demoLogin("seller")}
+                  className="bg-orange-600 hover:bg-orange-700 text-white text-xs h-10"
+                >
+                  Seller
+                </Button>
+                <Button
+                  onClick={() => demoLogin("user")}
+                  className="bg-green-600 hover:bg-green-700 text-white text-xs h-10"
+                >
+                  Customer
+                </Button>
+              </div>
+              <p className="text-xs text-gray-600 text-center mt-3">
+                Click any button to auto-fill demo credentials
+              </p>
             </div>
           </div>
 
