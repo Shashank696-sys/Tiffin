@@ -17,42 +17,7 @@ interface OtpData {
 
 const manualOtpStore: { [email: string]: OtpData } = {};
 
-import { z } from "zod";
 
-const turnstileSchema = z.object({
-  success: z.boolean(),
-  challenge_ts: z.string().optional(),
-  hostname: z.string().optional(),
-  "error-codes": z.array(z.string()).optional(),
-  action: z.string().optional(),
-  cdata: z.string().optional(),
-});
-
-export async function verifyTurnstile(token: string): Promise<boolean> {
-  try {
-    console.log("Verifying Turnstile token...");
-    
-    // YEH CORRECT FORMAT USE KARO:
-    const response = await fetch(
-      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: `secret=${process.env.TURNSTILE_SECRET_KEY}&response=${token}`,
-      }
-    );
-
-    const data = await response.json();
-    console.log("Turnstile response:", data);
-    
-    return data.success;
-  } catch (error) {
-    console.error("Turnstile verification failed:", error);
-    return false;
-  }
-}
 
 
 
@@ -246,14 +211,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const { email, password , turnstileToken } = req.body;
-
-       // Turnstile verify karo
-  const isHuman = await verifyTurnstile(turnstileToken);
-  if (!isHuman) {
-    return res.status(400).json({ 
-      message: "Security verification failed. Please try again." 
-    });
-  }
 
       // Get user from database
       const user = await storage.getUserByEmail(email);
