@@ -5,12 +5,6 @@ import jwt from "jsonwebtoken";
 import { body, validationResult } from "express-validator";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, type AuthRequest } from "./middleware/auth";
-import {
-  sendBookingConfirmationToCustomer,
-  sendBookingNotificationToSeller,
-  sendSellerStatusUpdate,
-} from "./services/email";
-import { sendOrderNotificationToSeller , sendPasswordResetOTP} from './emailService';
 // ✅ ADD THESE IMPORTS AT THE TOP
 import { MongoClient, ObjectId } from 'mongodb';
 
