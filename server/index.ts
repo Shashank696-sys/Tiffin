@@ -18,26 +18,26 @@ const app = express();
 
 // ✅ SECURITY MIDDLEWARE - ORDER MATTERS!
 
-// 1. Helmet - Security headers (development me thoda relaxed)
+// 1. Helmet - Security headers (production mein thoda adjust karo)
 app.use(helmet({
   contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      fontSrc: ["'self'", "https:"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:", "http:"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:", "http:", "blob:"],
+      fontSrc: ["'self'", "https:", "http:"],
       connectSrc: ["'self'"],
     },
-  } : false, // Development me CSP disable for Vite
+  } : false,
   crossOriginEmbedderPolicy: false
 }));
 
 // 2. CORS - Configure properly
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://yourdomain.com'] 
-    : ['http://localhost:3000', 'http://localhost:5000'],
+    ? true // Production mein sab allow karo
+    : ['http://localhost:3000', 'http://localhost:5000', 'http://localhost:10000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -61,7 +61,7 @@ app.use(hpp());
 // 6. Rate limiting (development me thoda relaxed)
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // Development me zyada requests allow
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000,
   message: {
     error: 'Too many requests from this IP, please try again after 15 minutes.'
   },
@@ -71,7 +71,7 @@ const generalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10, // Development me thode zyada login attempts
+  max: 10,
   message: {
     error: 'Too many login attempts, please try again after 15 minutes.'
   },
@@ -134,18 +134,28 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     // Register all routes
     const server = await registerRoutes(app);
 
-    // ✅ IMPORTANT: Vite setup ko pehle call karo
-    if (app.get("env") === "development") {
+    // ✅ IMPORTANT: Static files setup - PRODUCTION FIX
+    if (process.env.NODE_ENV === 'production') {
+      console.log("📁 Serving static files from dist/public...");
+      
+      // Static files serve karo
+      app.use(express.static(path.join(__dirname, '../public')));
+      app.use('/assets', express.static(path.join(__dirname, '../public/assets')));
+      
+      // SPA support - all routes to index.html
+      app.get('*', (req: Request, res: Response) => {
+        res.sendFile(path.join(__dirname, '../public/index.html'));
+      });
+      
+      console.log("✅ Production static files configured");
+    } else {
       console.log("🔧 Setting up Vite dev server...");
       await setupVite(app, server);
-    } else {
-      console.log("📁 Serving static files...");
-      serveStatic(app);
     }
 
-    // ✅ Root route - Vite ke baad
+    // ✅ Root route
     app.get("/", (req: Request, res: Response) => {
-      if (app.get("env") === "development") {
+      if (process.env.NODE_ENV === "development") {
         res.redirect("http://localhost:3000");
       } else {
         res.json({ 
@@ -175,9 +185,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
       log ? log(msg) : console.log(msg);
       
       if (process.env.NODE_ENV === 'production') {
-        console.log("🌐 Production server ready for Render.com");
+        console.log("🌐 Production Website: https://your-app.onrender.com");
+        console.log("✅ Static files should now load properly");
       } else {
-        console.log("🌐 Website should be available at: http://localhost:5000");
+        console.log("🌐 Dev Website: http://localhost:5000");
       }
     });
 
