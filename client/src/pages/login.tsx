@@ -11,19 +11,29 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
 import { apiRequest } from "@/lib/queryClient";
 import { loginSchema, type LoginCredentials, type AuthResponse } from "@shared/schema";
-import { UtensilsCrossed, Eye, EyeOff, ChefHat, Shield, User, ArrowLeft, Home, Star, Truck, Clock, ShieldCheck, RefreshCw } from "lucide-react";
+import { UtensilsCrossed, Eye, EyeOff, Truck, Clock, ShieldCheck, Star, ArrowLeft } from "lucide-react";
 
 export default function Login() {
   const { toast } = useToast();
   const { login } = useAuth();
   const [, setLocation] = useLocation();
   const [showPassword, setShowPassword] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
+  const form = useForm<LoginCredentials>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-      
+  const loginMutation = useMutation({
+    mutationFn: async (data: LoginCredentials & { turnstileToken?: string }) => {
       const response = await apiRequest<AuthResponse>("POST", "/api/auth/login", {
         email: data.email,
         password: data.password,
+        turnstileToken: data.turnstileToken,
       });
       return response;
     },
@@ -56,7 +66,7 @@ export default function Login() {
         variant: "destructive",
       });
       // Reset Turnstile on error
-      resetTurnstile();
+      setTurnstileToken(null);
     },
   });
 
@@ -93,10 +103,6 @@ export default function Login() {
     }, 100);
   };
 
-  const goBack = () => {
-    window.history.back();
-  };
-
   const goHome = () => {
     setLocation("/");
   };
@@ -118,7 +124,7 @@ export default function Login() {
         </div>
       </div>
 
- {/* Background decorative elements */}
+      {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-100 rounded-full mix-blend-multiply filter blur-xl opacity-30"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-red-50 rounded-full mix-blend-multiply filter blur-xl opacity-30"></div>
