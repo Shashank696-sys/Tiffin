@@ -284,7 +284,7 @@ export default function Login() {
                     <Button
                       type="submit"
                       className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50"
-                      disabled={loginMutation.isPending || !turnstileToken}
+                      disabled={loginMutation.isPending}
                     >
                       {loginMutation.isPending ? (
                         <div className="flex items-center gap-2">
