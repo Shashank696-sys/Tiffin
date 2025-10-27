@@ -10,6 +10,11 @@ import hpp from "hpp";
 import cors from "cors";
 import mongoSanitize from "express-mongo-sanitize";
 import path from "path";
+import { fileURLToPath } from "url";
+
+// ✅ ES Module compatible __dirname fix
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ✅ Load environment variables at the top
 dotenv.config();
@@ -95,7 +100,7 @@ if (!process.env.JWT_SECRET) {
 // ✅ Request logger middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
-  const path = req.path;
+  const requestPath = req.path;
   let capturedJsonResponse: any = undefined;
 
   const originalResJson = res.json.bind(res);
@@ -107,8 +112,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+    if (requestPath.startsWith("/api")) {
+      let logLine = `${req.method} ${requestPath} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         try {
           logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
@@ -138,13 +143,16 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     if (process.env.NODE_ENV === 'production') {
       console.log("📁 Serving static files from dist/public...");
       
+      // ✅ FIXED: Use process.cwd() for reliable path
+      const publicPath = path.join(process.cwd(), 'dist', 'public');
+      console.log(`📂 Static files path: ${publicPath}`);
+      
       // Static files serve karo
-      app.use(express.static(path.join(__dirname, '../public')));
-      app.use('/assets', express.static(path.join(__dirname, '../public/assets')));
+      app.use(express.static(publicPath));
       
       // SPA support - all routes to index.html
       app.get('*', (req: Request, res: Response) => {
-        res.sendFile(path.join(__dirname, '../public/index.html'));
+        res.sendFile(path.join(publicPath, 'index.html'));
       });
       
       console.log("✅ Production static files configured");
@@ -185,7 +193,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
       log ? log(msg) : console.log(msg);
       
       if (process.env.NODE_ENV === 'production') {
-        console.log("🌐 Production Website: https://your-app.onrender.com");
+        console.log("🌐 Production server ready!");
         console.log("✅ Static files should now load properly");
       } else {
         console.log("🌐 Dev Website: http://localhost:5000");
