@@ -13,93 +13,13 @@ import { apiRequest } from "@/lib/queryClient";
 import { loginSchema, type LoginCredentials, type AuthResponse } from "@shared/schema";
 import { UtensilsCrossed, Eye, EyeOff, ChefHat, Shield, User, ArrowLeft, Home, Star, Truck, Clock, ShieldCheck, RefreshCw } from "lucide-react";
 
-// Turnstile types
-declare global {
-  interface Window {
-    turnstile: {
-      render: (container: string | HTMLElement, options: any) => string;
-      remove: (widgetId: string) => void;
-      reset: (widgetId: string) => void;
-    };
-  }
-}
-
 export default function Login() {
   const { toast } = useToast();
   const { login } = useAuth();
   const [, setLocation] = useLocation();
   const [showPassword, setShowPassword] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
-  const [isTurnstileLoaded, setIsTurnstileLoaded] = useState(false);
 
-  // Load Turnstile script
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-    script.async = true;
-    script.defer = true;
-    
-    script.onload = () => {
-      setIsTurnstileLoaded(true);
-      initializeTurnstile();
-    };
 
-    document.head.appendChild(script);
-
-    return () => {
-      // Cleanup
-      if (turnstileWidgetId && window.turnstile) {
-        window.turnstile.remove(turnstileWidgetId);
-      }
-    };
-  }, []);
-
-  // Initialize Turnstile
-  const initializeTurnstile = () => {
-    if (window.turnstile) {
-      const widgetId = window.turnstile.render("#turnstile-widget", {
-        sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA",
-        callback: (token: string) => {
-          setTurnstileToken(token);
-        },
-        "error-callback": () => {
-          setTurnstileToken(null);
-          toast({
-            title: "Verification failed",
-            description: "Please complete the security check",
-            variant: "destructive",
-          });
-        },
-        "expired-callback": () => {
-          setTurnstileToken(null);
-        },
-      });
-      setTurnstileWidgetId(widgetId);
-    }
-  };
-
-  // Reset Turnstile
-  const resetTurnstile = () => {
-    if (turnstileWidgetId && window.turnstile) {
-      window.turnstile.reset(turnstileWidgetId);
-      setTurnstileToken(null);
-    }
-  };
-
-  const form = useForm<LoginCredentials & { turnstileToken?: string }>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  const loginMutation = useMutation({
-    mutationFn: async (data: LoginCredentials & { turnstileToken?: string }) => {
-      if (!turnstileToken) {
-        throw new Error("Please complete the security verification");
-      }
       
       const response = await apiRequest<AuthResponse>("POST", "/api/auth/login", {
         email: data.email,
@@ -347,32 +267,6 @@ export default function Login() {
                         </FormItem>
                       )}
                     />
-
-                    {/* Cloudflare Turnstile - YAHI ADD KIYA HAI */}
-                    <div className="space-y-3">
-                      <FormLabel className="text-sm font-medium text-gray-700">
-                        Security Verification
-                      </FormLabel>
-                      <div className="flex justify-center">
-                        <div 
-                          id="turnstile-widget" 
-                          className="turnstile-widget"
-                          style={{ 
-                            minHeight: '65px',
-                            display: 'flex',
-                            justifyContent: 'center'
-                          }}
-                        />
-                      </div>
-                      {!isTurnstileLoaded && (
-                        <div className="text-center py-4">
-                          <div className="flex items-center justify-center gap-2 text-gray-500">
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                            Loading security check...
-                          </div>
-                        </div>
-                      )}
-                    </div>
 
                     <div className="text-right">
                       <Link href="/forgot-password">
