@@ -166,14 +166,19 @@ app.use((req: Request, res: Response, next: NextFunction) => {
       res.status(status).json({ message });
     });
 
-    // Start server
-    const port = parseInt(process.env.PORT || "5000", 10);
-    const host = "localhost";
+    // ✅ FIXED: Render.com compatible server start
+    const port = parseInt(process.env.PORT || "10000", 10);
+    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
 
     server.listen(port, host, () => {
       const msg = `🚀 Server running at http://${host}:${port}`;
       log ? log(msg) : console.log(msg);
-      console.log("🌐 Website should be available at: http://localhost:5000");
+      
+      if (process.env.NODE_ENV === 'production') {
+        console.log("🌐 Production server ready for Render.com");
+      } else {
+        console.log("🌐 Website should be available at: http://localhost:5000");
+      }
     });
 
     server.on("error", (err: any) => {
