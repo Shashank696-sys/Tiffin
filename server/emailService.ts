@@ -36,11 +36,13 @@ const createTransporter = () => {
       user: emailUser,
       pass: emailPass,
     },
+    // YEH 3 LINES ADD KARDEIN:
+    connectionTimeout: 30000,  // 30 seconds
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
     tls: {
       rejectUnauthorized: false
-    },
-    connectionTimeout: 10000,
-    socketTimeout: 10000
+    }
   });
 };
 
